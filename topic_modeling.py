@@ -25,6 +25,7 @@ from wordcloud import WordCloud
 import config
 from utilities import selected_venues as sv
 from utilities import utilities
+import matplotlib.pyplot as plt
 
 client = MongoClient(config.__host, config.__port)
 papers_collection = client[config.__db_name][config.__collection_name]
@@ -34,7 +35,8 @@ def extract_data_from_mongo(year_from=2000, year_to=2014, venues_filter=None, co
     query = {'$and': [
         {'abstract': {'$ne': None}},
         {'year': {'$gte': year_from}},
-        {'year': {'$lte': year_to}}
+        {'year': {'$lte': year_to}},
+        {'acm_id': {'$ne': None}}
     ]}
 
     if venues_filter is not None:
@@ -165,7 +167,7 @@ def execute_lda_gensim(corpus, features, n_topics, out_filename_prefix):
 
     lda = LdaModel(corpus, id2word=id2word, num_topics=n_topics)
 
-    lda.save(os.path.join(config.__outputs_folder_path, out_filename_prefix))
+    lda.save(os.path.join(config.__inputs_outputs_folder_path, out_filename_prefix))
 
     end = time.time()
     output.append(end - start)
@@ -204,7 +206,7 @@ def compute_topic_model(year_from=1900, year_to=2020, venues_filter=None, n_topi
 
 
 def print_completed(result=None):
-    with open(os.path.join(config.__outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
+    with open(os.path.join(config.__inputs_outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
         status.write('[ENDED], {0} {1} {2}, {3}\n'.format(result[2], result[0], result[1], result[3]))
 
 
@@ -244,14 +246,14 @@ def run_pool_of_workers_gensim(min_df=2, max_df=0.7):
     for n_topics in range(50, 201, 10):
         for year_from in range(first_year, last_year):
             counter += 1
-            with open(os.path.join(config.__outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
+            with open(os.path.join(config.__inputs_outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
                 status.write('[QUEUED-{3}], {0} {1} {2}, -\n'.format(n_topics, year_from, year_from + 1, counter))
             pool.apply_async(compute_topic_model, (year_from, year_from + 1, sv.considered_venues, n_topics, True, min_df, max_df),
                              callback=print_completed)
 
         # run also the global one
         counter += 1
-        with open(os.path.join(config.__outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
+        with open(os.path.join(config.__inputs_outputs_folder_path, 'workers_pool_status.csv'), 'a') as status:
             status.write('[QUEUED-{3}], {0} {1} {2}, -\n'.format(n_topics, first_year, last_year, counter))
         pool.apply_async(compute_topic_model, (first_year, last_year, sv.considered_venues, n_topics, True, min_df, max_df),
                          callback=print_completed)
@@ -358,7 +360,7 @@ def get_word_frequencies(topic_description):
     return frequencies
 
 
-def generate_wordcloud(topic_description, use_mask='rectangle'):
+def generate_wordcloud(topic_description, use_mask='rectangle', store_to_file=False):
     """
     Generate and plot a word cloud from a specific topic description (list of word-weight pairs).
     Store it to file. 
@@ -380,10 +382,15 @@ def generate_wordcloud(topic_description, use_mask='rectangle'):
     # generate word cloud
     wc.generate_from_frequencies(topic_frequencies)
 
-    # store to file
-    wc.to_file(os.path.join(config.__outputs_folder_path, "wordcloud_{0}_{1}.png".format(
-        hash(str(topic_description)), use_mask)))
+    if store_to_file:
+        # store to file
+        wc.to_file(os.path.join(config.__inputs_outputs_folder_path, "wordcloud_{0}_{1}.png".format(
+            hash(str(topic_description)), use_mask)))
 
+    # show
+    plt.imshow(wc, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
 
 
 def get_paper_counter_per_topic_id(all_topic_assignments):
@@ -542,13 +549,13 @@ def assign_topics_and_save(training_starting_year, training_ending_year, number_
                           analysis_ending_year]]) + '-topicid-topic.json'
 
     out = sys.stdout
-    with open(os.path.join(config.__outputs_folder_path, out_filename), 'w') as out_csv:
+    with open(os.path.join(config.__inputs_outputs_folder_path, out_filename), 'w') as out_csv:
 
         if debug: out.write('Load model...\n')
 
         # compute (or load) the topic model
         topic_model = load_saved_model(training_starting_year, training_ending_year, training_venues,
-                                       number_of_topics_to_extract, config.__outputs_folder_path)
+                                       number_of_topics_to_extract, config.__inputs_outputs_folder_path)
         out_csv.write('{0};{1};{2}\n'.format('acm_id', 'topic_id', 'topic_weight'))
 
         if debug: out.write('Extract papers...\n')
@@ -582,7 +589,7 @@ def assign_topics_and_save(training_starting_year, training_ending_year, number_
 
     if debug: out.write('Save topic descriptions...\n')
 
-    with open(os.path.join(config.__outputs_folder_path, out_filename_2), 'w') as out_csv:
+    with open(os.path.join(config.__inputs_outputs_folder_path, out_filename_2), 'w') as out_csv:
         # save the topics description dump
         json.dump(topic_model.print_topics(number_of_topics_to_extract), out_csv)
 

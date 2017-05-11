@@ -29,5 +29,5 @@ b) import nktk and download lemmer data
 
 2) Ingest the dataset executing `data_ingestion.main()`
 
-3) Compute the topic model and save topics assignments to file executing `topic_modeling.main()`
+3) Run the notebook `jupyter notebook notebook`
 

@@ -22,7 +22,7 @@ __collection_name = 'papers'
 __input_dataset_dump = 'path/to/merged-dataset-v8.txt'
 
 # folder within write outputs
-__outputs_folder_path = '/path/to/outputs/folder'
+__inputs_outputs_folder_path = '/path/to/outputs/folder'
 
 # resources folder
 __resources_folder_path = 'path/to/utilities/and/resources'
