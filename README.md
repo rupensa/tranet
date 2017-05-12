@@ -22,6 +22,12 @@ b) import nktk and download lemmer data
     nltk.download('wordnet')
     nltk.download('punkt')
 
+#### For ubuntu users
+
+Install python3-dev:
+
+	sudo apt-get install python3-dev
+
     
 ### Run the demo
 
