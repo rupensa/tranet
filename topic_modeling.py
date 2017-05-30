@@ -309,20 +309,22 @@ def compute_topic_assignment(topic_model, abstracts, min_df=2, max_df=0, tf_matr
     return topic_assignment
 
 
-def disambiguate_topic(topic_description, min_word_probability=0.010):
+def disambiguate_topic(topic_description, min_word_probability=0.010, max_words=6):
     """
     Try to disambiguate a topic 
     :param topic_description: is a list of pairs  (word, word_probability)
     :param min_word_probability: is the minimum probability for words 
     :return:  
     """
-    words = [w for w,p in topic_description if p >= min_word_probability]
+    words = [w for w, p in topic_description if p >= min_word_probability]
+    words = words[:max_words]
 
     if len(words) == 0:
-        # if no words are over the threshold, take the first
-        words = [topic_description[0][0]]
+        # if no words are over the threshold return empty
+        res = []
+    else:
+        res = wikipedia.search(' '.join(words))
 
-    res = wikipedia.search(' '.join(words))
     return res
 
 
