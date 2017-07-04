@@ -2,7 +2,7 @@
 
 ### Dataset
 
-The dataset is available at https://datacloud.di.unito.it/index.php/s/ymSe23wGp1z7aLg and is encoded in the ArnetMiner v8 format.
+The dataset is available in the `dataset` folder and is encoded in the ArnetMiner v8 format.
 
 ### Installation
 
