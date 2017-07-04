@@ -4,6 +4,11 @@
 
 The dataset is available in the `dataset` folder and is encoded in the ArnetMiner v8 format.
 
+To unzip 
+
+	cat merged-dataset-v8-splitted.z* > merged-dataset-v8-splitted-complete.zip
+	unzip merged-dataset-v8-splitted-complete.zip
+
 ### Installation
 
 Install dependencies 
